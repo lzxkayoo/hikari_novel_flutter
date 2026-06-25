@@ -1,3 +1,10 @@
+# 概述
+- 此仓库 fork 自[Hikari Novel](https://github.com/15dd/hikari_novel_flutter)
+- 自用仓库
+- 使用 GitHub Actions 自动构建 APK
+---
+（以下为原 readme）
+
 ### 📣自0.2.0版本开始，本软件开始转为使用网页源，放弃了mewx源📣
 ### ⚠️我还要说明一点，如果你编译出来了，就自己用，不要发到其他地方。分享欲再旺盛也别发，你这是在害我们，老版的Hikari Novel就是一个例子。不要让我把这个项目也关停了，大家到时候都别用！⚠️
 
