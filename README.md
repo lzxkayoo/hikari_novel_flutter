@@ -1,7 +1,8 @@
 # 概述
 - 此仓库 fork 自[Hikari Novel](https://github.com/15dd/hikari_novel_flutter)
 - 自用仓库
-- 使用 GitHub Actions 自动构建 APK
+- 使用 GitHub Actions 构建 APK
+- 使用 AI 生成
 ---
 （以下为原 readme）
 
