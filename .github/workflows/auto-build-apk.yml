@@ -1,9 +1,14 @@
-name: Auto Build APK
+name: Flutter Auto Build & Release
 
 on:
-  workflow_dispatch: # 支持手动点击运行
+  workflow_dispatch: # 支持你在网页端手动点击运行
   push:
-    branches: [ "main", "master", "develop" ] # 当这些分支有变动时触发
+    tags:
+      - 'v*' # 进阶：当你推送形如 v1.0.0 的版本标签时也会自动触发
+
+# 【关键新增】赋予脚本创建和修改 Release 的写入权限
+permissions:
+  contents: write
 
 jobs:
   build:
@@ -25,31 +30,37 @@ jobs:
     - name: Set up Flutter
       uses: subosito/flutter-action@v2
       with:
-        channel: 'stable'       
-        flutter-version: 'any'  
-        cache: true             
+        channel: 'stable'
+        flutter-version: 'any'
+        cache: true
 
-    # 4. 获取 Flutter 依赖包
+    # 4. 获取依赖
     - name: Install dependencies
       run: flutter pub get
 
-    # 5. 编译正式版 APK（Release 产物更小、运行更流畅）
+    # 5. 编译正式版 APK
     - name: Build APK
       run: flutter build apk --release
 
-    # 6. 重命名 APK
+    # 6. 自动重命名 APK（这里改成了“项目名-构建号.apk”）
     - name: Rename APK File
       run: |
         cd build/app/outputs/flutter-apk/
-        # 获取当前日期
-        DATE=$(date +'%Y%m%d')
-        # 使用 GitHub 变量自动获取仓库名，拼接成：仓库名-日期.apk
-        mv app-release.apk "${{ github.event.repository.name }}-$DATE.apk"
+        mv app-release.apk "${{ github.event.repository.name }}-v${{ github.run_number }}.apk"
 
-    #7. 上传 APK
-    - name: Upload APK
-      uses: actions/upload-artifact@v4
+    # 7. 自动创建 Release 并上传 APK
+    - name: Push to GitHub Releases
+      uses: softprops/action-gh-release@v2
       with:
-        name: flutter-release-apk
-        # 用通配符 *.apk，这样不管名字怎么变都能识别并上传
-        path: build/app/outputs/flutter-apk/*.apk
+        # 如果是手动触发，自动用构建号当版本号（如 v12）；如果是推送标签触发，则用标签名
+        tag_name: ${{ github.ref_type == 'tag' && github.ref_name || format('v{0}', github.run_number) }}
+        name: ${{ github.ref_type == 'tag' && github.ref_name || format('自动编译版 v{0}', github.run_number) }}
+        body: |
+          这是由 GitHub Actions 自动编译生成的 Flutter APK。
+          - 编译时间: ${{ github.event.repository.updated_at }}
+          - 运行编号: #${{ github.run_number }}
+        draft: false        # 是否为草稿（false 代表直接公开推出去）
+        prerelease: false   # 是否为预发布版本
+        files: build/app/outputs/flutter-apk/*.apk # 扫描并上传该目录下的改名后的 APK
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # GitHub 自动生成的临时密码，无需手动配置
